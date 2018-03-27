@@ -10,6 +10,10 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.arcaneless.myoairblock.airblock.AirBlockControlWordInstruction;
+import com.arcaneless.myoairblock.airblock.action.AirActionHandler;
+import com.arcaneless.myoairblock.airblock.AirBlockGetInstruction;
+import com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
 import com.thalmic.myo.Hub;
@@ -20,9 +24,12 @@ import com.thalmic.myo.Vector3;
 import com.thalmic.myo.XDirection;
 import com.thalmic.myo.scanner.ScanActivity;
 
+import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.*;
+
 public class MainActivity extends AppCompatActivity {
 
     private final Context context = this;
+    public AirBlockManager airblockManager;
     private TextView linkStatus;
     private TextView syncStatus;
     private TextView lockStatus;
@@ -145,10 +152,17 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        airblockManager = AirBlockManager.getInstance();
+        airblockManager.initConsultant(this);
+
+        // AirAction handler
+        AirActionHandler.initActionHandler();
 
 
         
@@ -169,6 +183,9 @@ public class MainActivity extends AppCompatActivity {
         hub.setLockingPolicy(Hub.LockingPolicy.NONE);
         hub.addListener(listener);
 
+        // Ble Consultant
+
+
         Button button = findViewById(R.id.linkMyo);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -185,6 +202,14 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button test = findViewById(R.id.test_airblock);
+        test.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                onPressedTest();
+            }
+        });
+
     }
 
     @Override
@@ -195,6 +220,9 @@ public class MainActivity extends AppCompatActivity {
         if (isFinishing()) {
             Hub.getInstance().shutdown();
         }
+
+        airblockManager.resetDevice();
+        airblockManager.getConsultant().disconnect();
     }
 
     private void onPressedLinkMyo() {
@@ -205,5 +233,64 @@ public class MainActivity extends AppCompatActivity {
     private void onPressedLinkAirblock() {
         Intent intent = new Intent(this, BluetoothSelectActivity.class);
         startActivity(intent);
+    }
+
+    private void onPressedTest() {
+        if (airblockManager.getDevice() != null) {
+            final Thread getThread = new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        int i = 0;
+                        while(airblockManager.isLaunched()) {
+                            airblockManager.doInstruction(AirBlockGetInstruction.GET.ULTRASONICDISTANCE.instruction());
+                            Thread.sleep(50L);
+                            i++;
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            };
+            // Thread main
+            new Thread() {
+                @Override
+                public void run() {
+                    try {
+                        airblockManager.initDevice();
+                        Thread.sleep(1000L);
+                        airblockManager.doInstruction(airblockGyroCalibrate());
+
+                        airblockManager.doInstruction(airblockSpeed((short) 0, (short) 0));
+                        airblockManager.doInstruction(airblockLaunch());
+                        getThread.start();
+                        Thread.sleep(1000L);
+                        airblockManager.doInstruction(airblockTakeOff());
+                        Thread.sleep(100L);
+                        //Thread.sleep(1000L);
+                        int i = 0;
+                        while (i < 2000) {
+                            if (airblockManager.getDistance() < 1.4)
+                                airblockManager.doInstruction(airblockControlWord(AirBlockControlWordInstruction.WORD_HOVER, 1F));
+                            else if (airblockManager.getDistance() > 1.6)
+                                airblockManager.doInstruction(airblockControlWord(AirBlockControlWordInstruction.WORD_DOWN, 1F));
+                            //airblockManager.doInstruction(airblockControlWord(AirBlockControlWordInstruction.WORD_BALANCE, 0));
+                            i += 200;
+                            Thread.sleep(200L);
+                        }
+                        //Thread.sleep(2000L);
+                        while(airblockManager.getDistance() > 1) {
+                            airblockManager.doInstruction(airblockControlWord(AirBlockControlWordInstruction.WORD_DOWN, 1F));
+                        }
+                        airblockManager.doInstruction(airblockLanding());
+                        Thread.sleep(500L);
+                        airblockManager.resetDevice();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }.start();
+
+        }
     }
 }
