@@ -33,5 +33,6 @@ dependencies {
     }
 
     compile('com.thalmic:myosdk:0.10.0')
+    compile 'ml.xuexin:bleconsultant:0.2.0'
 
 }

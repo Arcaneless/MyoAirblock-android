@@ -49,6 +49,7 @@ public class AirBlockManager {
     private boolean turnedOn = false;
     private boolean launched = false;
     private float distance = 0;
+    private AirBlockState airblockState = AirBlockState.NOTCONNECTED;
 
     public AirBlockManager() {
         //handler
@@ -220,5 +221,13 @@ public class AirBlockManager {
 
     public boolean isLaunched() {
         return launched;
+    }
+
+    public AirBlockState getAirblockState() {
+        return airblockState;
+    }
+
+    public void setAirblockState(AirBlockState state) {
+        airblockState = state;
     }
 }
