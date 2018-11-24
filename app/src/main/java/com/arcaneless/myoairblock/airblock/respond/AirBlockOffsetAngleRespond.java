@@ -1,7 +1,5 @@
 package com.arcaneless.myoairblock.airblock.respond;
 
-import com.arcaneless.myoairblock.airblock.respond.BleRespond;
-
 /**
  * Created by marcuscheung on 13/1/2018.
  */
@@ -21,7 +19,7 @@ public class AirBlockOffsetAngleRespond extends BleRespond {
 
     @Override
     public String toString() {
-        return super.toString() + ": \u4fef\u4ef0\u89d2\uff1a" + this.angle1 + " \u6a2a\u6eda\u89d2\uff1a" + this.angle2 + " \u504f\u822a\u89d2\uff1a" + this.angle3;
+        return super.toString() + ": Pitch：" + this.angle1 + " Roll：" + this.angle2 + " Yaw：" + this.angle3;
     }
 
 }

@@ -7,13 +7,17 @@ import android.util.Log;
 import com.arcaneless.myoairblock.airblock.AirBlockInstruction;
 import com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory;
 import com.arcaneless.myoairblock.airblock.AirBlockLaunchInstruction;
+import com.arcaneless.myoairblock.airblock.AirBlockRequestOffsetAngleInstruction;
+import com.arcaneless.myoairblock.airblock.AirBlockSetLEDInstruction;
 import com.arcaneless.myoairblock.airblock.AirBlockStateInstruction;
 import com.arcaneless.myoairblock.airblock.AirBlockStopInstruction;
 import com.arcaneless.myoairblock.airblock.HeartbeatPackage;
+import com.arcaneless.myoairblock.airblock.respond.AirBlockOffsetAngleRespond;
 import com.arcaneless.myoairblock.airblock.respond.AirBlockStateRespond;
 import com.arcaneless.myoairblock.airblock.respond.AirBlockUltrasonicDistRespond;
 import com.arcaneless.myoairblock.airblock.respond.BleRespond;
 import com.arcaneless.myoairblock.airblock.respond.BleRespondParser;
+import com.thalmic.myo.Vector3;
 
 import java.util.Scanner;
 import java.util.UUID;
@@ -44,11 +48,15 @@ public class AirBlockManager {
 
     private Runnable heatbeatRunnable;
     private Runnable turnOnStateRunnable;
+    private Runnable angleStateRunnable;
 
     // AirBlock status
     private boolean turnedOn = false;
     private boolean launched = false;
     private float distance = 0;
+    private float angle1 = 0;
+    private float angle2 = 0;
+    private float angle3 = 0;
     private AirBlockState airblockState = AirBlockState.NOTCONNECTED;
 
     public AirBlockManager() {
@@ -68,9 +76,18 @@ public class AirBlockManager {
         turnOnStateRunnable = new Runnable() {
             @Override
             public void run() {
-                Log.i("BLE Send Tag", "Turn on state");
+                Log.i("BLE Send Tag", "Turn On State");
                 writeToBluetooth(new AirBlockStateInstruction((byte)1).getBytes());
                 handler.postDelayed(this, 200L);
+            }
+        };
+
+        angleStateRunnable = new Runnable() {
+            @Override
+            public void run() {
+                Log.i("BLE Send Tag", "Offset Angle State");
+                writeToBluetooth(new AirBlockRequestOffsetAngleInstruction().getBytes());
+                handler.postDelayed(this, 500L);
             }
         };
 
@@ -87,6 +104,13 @@ public class AirBlockManager {
 
                 if (value instanceof AirBlockUltrasonicDistRespond) {
                     distance = ((AirBlockUltrasonicDistRespond) value).distance;
+                }
+
+                if (value instanceof AirBlockOffsetAngleRespond) {
+                    AirBlockOffsetAngleRespond offsetAngleRespond = ((AirBlockOffsetAngleRespond) value);
+                    angle1 = offsetAngleRespond.angle1;
+                    angle2 = offsetAngleRespond.angle2;
+                    angle3 = offsetAngleRespond.angle3;
                 }
             }
         });
@@ -113,7 +137,9 @@ public class AirBlockManager {
     public void initDevice() {
         handler.post(heatbeatRunnable);
         handler.post(turnOnStateRunnable);
+        handler.post(angleStateRunnable);
         turnedOn = true;
+        doInstruction(new AirBlockSetLEDInstruction((byte) 0, 0, 0, 0));
     }
 
     public void resetDevice() { // stop the heartbeat and stop
@@ -229,5 +255,9 @@ public class AirBlockManager {
 
     public void setAirblockState(AirBlockState state) {
         airblockState = state;
+    }
+
+    public Vector3 getAngle() {
+        return new Vector3(angle1, angle2, angle3);
     }
 }

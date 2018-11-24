@@ -1,10 +1,12 @@
 package com.arcaneless.myoairblock;
 
 import android.app.Activity;
+import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.arcaneless.myoairblock.airblock.AirBlockControlWordInstruction;
+import com.arcaneless.myoairblock.airblock.AirBlockSetLEDInstruction;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
 import com.thalmic.myo.Myo;
@@ -36,6 +38,9 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
 
     private AirBlockManager airblockManager;
     private PoseHandler poseHandler;
+
+    private int flag;
+    private int lastFlag = 1;
 
     AirBlockMyoLinker(Activity mainActivity, AirBlockManager manager) {
         this.activity = mainActivity;
@@ -126,16 +131,36 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
             }
 
             // up
-            if (yaw > 1) {
+            if (pitch > 1) {
                 airblockManager.setAirblockState(AirBlockState.UPWARD);
-            } else if (yaw < -1) {
+            } else if (pitch < -1) {
                 airblockManager.setAirblockState(AirBlockState.DOWNWARD);
             } else {
                 airblockManager.setAirblockState(AirBlockState.HOVER);
             }
         }
 
+        /*
+        *
+        * Relative Rotation of Myo and AirBlock
+        *
+        * */
+        lastFlag = flag;
+        flag = ((int) (yaw + 180) / 120);
+        Log.e("FLAG", flag + ", " + yaw);
 
+        if (lastFlag == flag) return;
+        airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) flag, 255, 255, 255));
+        if (flag == 0) {
+            airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 1, 255, 0, 0));
+            airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 2, 255, 0, 0));
+        } else if (flag == 1) {
+            airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 0, 255, 0, 0));
+            airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 2, 255, 0, 0));
+        } else if (flag == 2) {
+            airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 0, 255, 0, 0));
+            airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 1, 255, 0, 0));
+        }
     }
 
     @Override
@@ -174,7 +199,10 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
             @Override
             public void run() {
                 try {
-                    airBlockStateExecution();
+                    Log.i("Thread State", airblockManager.getAirblockState().toString());
+                    Vector3 angle = airblockManager.getAngle();
+                    Log.i("Thread State", "angle value: [" + angle.x() + "][" + angle.y() + "][" + angle.z() + "]");
+                    //airBlockStateExecution();
                     Thread.sleep(200L);
                 } catch (Exception e) {
                     e.printStackTrace();

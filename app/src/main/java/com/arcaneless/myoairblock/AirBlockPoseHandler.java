@@ -5,9 +5,6 @@ import android.widget.TextView;
 
 import com.thalmic.myo.Pose;
 
-import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockStop;
-import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockTakeOff;
-
 /**
  * Created by marcuscheung on 14/10/2018.
  */
@@ -68,18 +65,19 @@ public class AirBlockPoseHandler implements PoseHandler {
     @Override
     public void onWaveIn() {
         poseStatus.setText(activity.getString(R.string.pose_wavein));
-        manager.doInstruction(airblockTakeOff());
+        //manager.doInstruction(airblockTakeOff());
     }
 
     @Override
     public void onWaveOut() {
         poseStatus.setText(activity.getString(R.string.pose_waveout));
         manager.setAirblockState(AirBlockState.OFF);
-        manager.doInstruction(airblockStop());
+       // manager.doInstruction(airblockStop());
     }
 
     @Override
     public void onFingerSpread() {
+        //manager.doInstruction(airblockLanding());
         poseStatus.setText(activity.getString(R.string.pose_fingersspread));
     }
 }
