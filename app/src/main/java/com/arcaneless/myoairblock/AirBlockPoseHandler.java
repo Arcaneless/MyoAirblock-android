@@ -9,6 +9,7 @@ import com.thalmic.myo.Pose;
  * Created by marcuscheung on 14/10/2018.
  */
 
+// TODO add meaning to the gestures
 public class AirBlockPoseHandler implements PoseHandler {
 
     private AirBlockManager manager;

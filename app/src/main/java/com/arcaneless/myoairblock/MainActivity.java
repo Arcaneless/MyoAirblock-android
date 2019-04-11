@@ -23,6 +23,8 @@ import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.air
 import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockSpeed;
 import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockTakeOff;
 
+
+//TODO Beautify the User interface
 public class MainActivity extends AppCompatActivity {
 
     private final Context context = this;

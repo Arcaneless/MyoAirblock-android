@@ -7,6 +7,8 @@ package com.arcaneless.myoairblock.airblock.respond;
 public class BleRespond {
 
 
-
-
+    @Override
+    public String toString() {
+        return "BleRespond";
+    }
 }

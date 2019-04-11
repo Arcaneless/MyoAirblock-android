@@ -6,6 +6,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.arcaneless.myoairblock.airblock.AirBlockControlWordInstruction;
+import com.arcaneless.myoairblock.airblock.AirBlockGetInstruction;
 import com.arcaneless.myoairblock.airblock.AirBlockSetLEDInstruction;
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
@@ -19,12 +20,14 @@ import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.air
 import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockControlWord;
 import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockGyroCalibrate;
 import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockLanding;
+import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockLaunch;
 import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.airblockStop;
 
 /**
  * Created by marcuscheung on 14/10/2018.
  */
 
+// TODO a AirBlock Flight Control Cycle manager
 public class AirBlockMyoLinker extends AbstractDeviceListener {
 
     private Activity activity;
@@ -64,6 +67,7 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
         airblockManager.initDevice();
         airblockManager.doInstruction(airblockGyroCalibrate());
         airblockManager.doInstruction(airblockBoardCalibrate());
+        airblockManager.doInstruction(airblockLaunch());
     }
 
     @Override
@@ -117,23 +121,23 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
         }
 
         // Next, we apply a rotation to the text view using the roll, pitch, and yaw.
-        rotationStatus.setRotation(roll);
+        //rotationStatus.setRotation(roll);
         rotationStatus.setText(String.valueOf(yaw));
-        rotationStatus.setRotationX(pitch);
+        //rotationStatus.setRotationX(pitch);
 
         if (airblockManager.isLaunched()) {
-            if (roll > 1) {
+            if (roll > 22.5) {
                 airblockManager.setAirblockState(AirBlockState.LEFTWARD);
-            } else if (roll < -1) {
+            } else if (roll < -22.5) {
                 airblockManager.setAirblockState(AirBlockState.RIGHTWARD);
             } else {
                 airblockManager.setAirblockState(AirBlockState.HOVER);
             }
 
             // up
-            if (pitch > 1) {
+            if (pitch > 22.5) {
                 airblockManager.setAirblockState(AirBlockState.UPWARD);
-            } else if (pitch < -1) {
+            } else if (pitch < -22.5) {
                 airblockManager.setAirblockState(AirBlockState.DOWNWARD);
             } else {
                 airblockManager.setAirblockState(AirBlockState.HOVER);
@@ -145,9 +149,14 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
         * Relative Rotation of Myo and AirBlock
         *
         * */
+        // TODO adjust the direction of the AirBlock using myo's yaw
         lastFlag = flag;
         flag = ((int) (yaw + 180) / 120);
-        Log.e("FLAG", flag + ", " + yaw);
+        double modiAngle = yaw - airblockManager.getAngle().z();
+        airblockManager.doInstruction(AirBlockGetInstruction.GET.BOARDOFFSETANGLE.instruction());
+        airblockManager.doInstruction(AirBlockGetInstruction.GET.ULTRASONICDISTANCE.instruction());
+        Log.e("FLAG", flag + ", " + yaw + ", AirBlockYaw: " + airblockManager.getAngle().z() + ", modified angle: " + modiAngle);
+        Log.e("Debug2", "Angle: " + airblockManager.getTestAngle());
 
         if (lastFlag == flag) return;
         airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) flag, 255, 255, 255));
@@ -161,11 +170,13 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
             airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 0, 255, 0, 0));
             airblockManager.doInstruction(new AirBlockSetLEDInstruction((byte) 1, 255, 0, 0));
         }
+
     }
 
     @Override
     public void onPose(Myo myo, long timestamp, Pose pose) {
         poseHandler.poseSwitch(pose);
+
 
         if (pose != Pose.UNKNOWN && pose != Pose.REST) {
             //myo.unlock(Myo.UnlockType.HOLD);
@@ -184,6 +195,8 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
     public void onAccelerometerData(Myo myo, long timestamp, Vector3 accel) {
         armStatus.setText(activity.getString(R.string.accel, accel.x(), accel.y(), accel.z()));
 
+        // TODO make AirBlock move forward or backward base on myo's acceleration
+        /*
         if (accel.x() > 2) {
             airblockManager.setAirblockState(AirBlockState.BACKWARD);
             myo.notifyUserAction();
@@ -191,10 +204,10 @@ public class AirBlockMyoLinker extends AbstractDeviceListener {
         if (accel.x() < -2) {
             airblockManager.setAirblockState(AirBlockState.FORWARD);
             myo.notifyUserAction();
-        }
+        }*/
 
 
-
+        // TODO AirBlock turner
         new Thread() {
             @Override
             public void run() {

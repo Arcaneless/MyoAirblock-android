@@ -12,6 +12,7 @@ import com.arcaneless.myoairblock.airblock.AirBlockSetLEDInstruction;
 import com.arcaneless.myoairblock.airblock.AirBlockStateInstruction;
 import com.arcaneless.myoairblock.airblock.AirBlockStopInstruction;
 import com.arcaneless.myoairblock.airblock.HeartbeatPackage;
+import com.arcaneless.myoairblock.airblock.respond.AirBlockAngleRespond;
 import com.arcaneless.myoairblock.airblock.respond.AirBlockOffsetAngleRespond;
 import com.arcaneless.myoairblock.airblock.respond.AirBlockStateRespond;
 import com.arcaneless.myoairblock.airblock.respond.AirBlockUltrasonicDistRespond;
@@ -53,10 +54,13 @@ public class AirBlockManager {
     // AirBlock status
     private boolean turnedOn = false;
     private boolean launched = false;
+    // distance between the board and the floor
     private float distance = 0;
+    // angle1: Pitch, angle2: roll, angle3: yaw
     private float angle1 = 0;
     private float angle2 = 0;
     private float angle3 = 0;
+    private float angle = 0;
     private AirBlockState airblockState = AirBlockState.NOTCONNECTED;
 
     public AirBlockManager() {
@@ -87,7 +91,7 @@ public class AirBlockManager {
             public void run() {
                 Log.i("BLE Send Tag", "Offset Angle State");
                 writeToBluetooth(new AirBlockRequestOffsetAngleInstruction().getBytes());
-                handler.postDelayed(this, 500L);
+                handler.postDelayed(this, 1000L);
             }
         };
 
@@ -111,6 +115,11 @@ public class AirBlockManager {
                     angle1 = offsetAngleRespond.angle1;
                     angle2 = offsetAngleRespond.angle2;
                     angle3 = offsetAngleRespond.angle3;
+                }
+
+                if (value instanceof AirBlockAngleRespond) {
+                    AirBlockAngleRespond angleRespond = ((AirBlockAngleRespond) value);
+                    angle = angleRespond.angle3;
                 }
             }
         });
@@ -155,6 +164,12 @@ public class AirBlockManager {
 
         writeToBluetooth(instruction.getBytes());
     }
+
+    /**
+     *  Below functions handle the fundamental operation of the AirBlock
+     *  Developers should not modify them
+     *  or it will not control the drone
+    **/
 
     // Write
     public void writeToBluetooth(byte[] array) {
@@ -231,9 +246,10 @@ public class AirBlockManager {
     }
 
 
-
-
-    //  GETTER
+    /**
+     * The below functions try to get the status of the drone
+     * Including its position and power state
+     */
 
 
     // Get distance between floor
@@ -259,5 +275,9 @@ public class AirBlockManager {
 
     public Vector3 getAngle() {
         return new Vector3(angle1, angle2, angle3);
+    }
+
+    public float getTestAngle() {
+        return angle;
     }
 }
