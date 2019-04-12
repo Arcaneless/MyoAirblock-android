@@ -7,9 +7,11 @@ import com.thalmic.myo.Pose;
 
 /**
  * Created by marcuscheung on 14/10/2018.
+ * Link the pose gesture to the AirBlock movement
+ * Sub program to AirBlockMyoLinker.java
  */
 
-// TODO add meaning to the gestures
+// TODO add meanings to the gestures
 public class AirBlockPoseHandler implements PoseHandler {
 
     private AirBlockManager manager;

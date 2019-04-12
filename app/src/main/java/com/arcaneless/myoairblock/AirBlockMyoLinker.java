@@ -25,6 +25,7 @@ import static com.arcaneless.myoairblock.airblock.AirBlockInstructionFactory.air
 
 /**
  * Created by marcuscheung on 14/10/2018.
+ * Connect the Myo movement to AirBlock flight state
  */
 
 // TODO a AirBlock Flight Control Cycle manager

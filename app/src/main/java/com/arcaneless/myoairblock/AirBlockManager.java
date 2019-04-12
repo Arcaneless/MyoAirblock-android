@@ -30,9 +30,10 @@ import ml.xuexin.bleconsultant.tool.BleLog;
 
 /**
  * Created by marcuscheung on 16/1/2018.
+ * A manager of airblock
+ * Build a bridge to communicate between bluetooth access on AirBlock and the control program
  */
 
-// manager of airblock
 public class AirBlockManager {
 
     private static AirBlockManager instance = new AirBlockManager();
